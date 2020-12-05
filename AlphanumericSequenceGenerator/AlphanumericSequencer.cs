@@ -22,14 +22,14 @@ namespace AlphanumericSequenceGenerator
             _upperBoundParts = GetBoundAlphanumericParts(upperBound);
 
             // Check bounds coherence
-            CheckBoundAlphanumericParts(_lowerBoundParts, _upperBoundParts);
+            CheckBoundAlphanumericParts();
 
             // Get separator parts
             _boundSeparators = GetBoundSeparators(lowerBound);
             var upperBoundSeparators = GetBoundSeparators(upperBound);
 
             // Check separators coherence
-            CheckBoundSeparators(_boundSeparators, upperBoundSeparators);
+            CheckBoundSeparators(upperBoundSeparators);
         }
 
         private List<BoundPart> GetBoundAlphanumericParts(string bound)
@@ -52,25 +52,25 @@ namespace AlphanumericSequenceGenerator
             return boundParts;
         }
 
-        private void CheckBoundAlphanumericParts(List<BoundPart> lowers, List<BoundPart> uppers)
+        private void CheckBoundAlphanumericParts()
         {
-            if (lowers.Count != uppers.Count)
-                throw new Exception($"The number of groups in bounds are different: {lowers.Count} / {uppers.Count}.");
+            if (_lowerBoundParts.Count != _upperBoundParts.Count)
+                throw new Exception($"The number of groups in bounds are different: {_lowerBoundParts.Count} / {_upperBoundParts.Count}.");
 
-            for (var i = 0; i < lowers.Count; i++)
+            for (var i = 0; i < _lowerBoundParts.Count; i++)
             {
-                if (lowers[i].groupType != uppers[i].groupType)
-                    throw new Exception($"Group types in bounds are different: {lowers[i].part} / {uppers[i].part}.");
+                if (_lowerBoundParts[i].groupType != _upperBoundParts[i].groupType)
+                    throw new Exception($"Group types in bounds are different: {_lowerBoundParts[i].part} / {_upperBoundParts[i].part}.");
 
-                if (lowers[i].length > uppers[i].length)
-                    throw new Exception($"A group length in the lower bound is longer than in the upper bound: {lowers[i].part} > {uppers[i].part}.");
+                if (_lowerBoundParts[i].length > _upperBoundParts[i].length)
+                    throw new Exception($"A group length in the lower bound is longer than in the upper bound: {_lowerBoundParts[i].part} > {_upperBoundParts[i].part}.");
 
-                var lower = lowers[i].part;
-                var upper = uppers[i].part;
+                var lower = _lowerBoundParts[i].part;
+                var upper = _upperBoundParts[i].part;
                 if (lower.Length < upper.Length)
                     lower = new string(' ', upper.Length - lower.Length) + lower;
                 if (lower.CompareTo(upper) > 0)
-                    throw new Exception($"A group in the lower bound follows the related group in the upper bound: {lowers[i].part} > {uppers[i].part}.");
+                    throw new Exception($"A group in the lower bound follows the related group in the upper bound: {_lowerBoundParts[i].part} > {_upperBoundParts[i].part}.");
             }
         }
 
@@ -88,15 +88,15 @@ namespace AlphanumericSequenceGenerator
             return separators;
         }
 
-        private void CheckBoundSeparators(List<BoundPart> lowerSeparators, List<BoundPart> upperSeparators)
+        private void CheckBoundSeparators(List<BoundPart> upperSeparators)
         {
-            if (lowerSeparators.Count != upperSeparators.Count)
-                throw new Exception($"The number of separators in bounds are different: {lowerSeparators.Count} / {upperSeparators.Count}.");
+            if (_boundSeparators.Count != upperSeparators.Count)
+                throw new Exception($"The number of separators in bounds are different: {_boundSeparators.Count} / {upperSeparators.Count}.");
 
-            for (var i = 0; i < lowerSeparators.Count; i++)
+            for (var i = 0; i < _boundSeparators.Count; i++)
             {
-                if (lowerSeparators[i].part != upperSeparators[i].part)
-                    throw new Exception($"Separators in bounds are different: {lowerSeparators[i].part} / {upperSeparators[i].part}.");
+                if (_boundSeparators[i].part != upperSeparators[i].part)
+                    throw new Exception($"Separators in bounds are different: {_boundSeparators[i].part} / {upperSeparators[i].part}.");
             }
         }
 
