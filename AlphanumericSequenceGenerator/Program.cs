@@ -14,10 +14,8 @@ namespace AlphanumericSequenceGenerator
                 return;
             }
 
-            var sequencer = new AlphanumericSequencer(args[0], args[1]);
-
             // Generate the sequence
-            var sequence = sequencer.GetSequence();
+            var sequence = AlphanumericSequencer.GetSequence(args[0], args[1]);
 
             foreach (var item in sequence)
             {

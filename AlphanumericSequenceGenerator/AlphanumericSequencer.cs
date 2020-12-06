@@ -5,34 +5,32 @@ using System.Text.RegularExpressions;
 
 namespace AlphanumericSequenceGenerator
 {
-    public class AlphanumericSequencer
+    public static class AlphanumericSequencer
     {
         private const string LOW_ALPHA = "lowAlpha";
         private const string UP_ALPHA = "upAlpha";
         private const string NUMERIC = "numeric";
 
-        private readonly List<BoundPart> _lowerBoundParts;
-        private readonly List<BoundPart> _upperBoundParts;
-        private readonly List<BoundPart> _boundSeparators;
-
-        public AlphanumericSequencer(string lowerBound, string upperBound)
+        public static IEnumerable<string> GetSequence(string lowerBound, string upperBound)
         {
             // Get bound parts
-            _lowerBoundParts = GetBoundAlphanumericParts(lowerBound);
-            _upperBoundParts = GetBoundAlphanumericParts(upperBound);
+            var lowerBoundParts = GetBoundAlphanumericParts(lowerBound);
+            var upperBoundParts = GetBoundAlphanumericParts(upperBound);
 
             // Check bounds coherence
-            CheckBoundAlphanumericParts();
+            CheckBoundAlphanumericParts(lowerBoundParts, upperBoundParts);
 
             // Get separator parts
-            _boundSeparators = GetBoundSeparators(lowerBound);
+            var lowerBoundSeparators = GetBoundSeparators(lowerBound);
             var upperBoundSeparators = GetBoundSeparators(upperBound);
 
             // Check separators coherence
-            CheckBoundSeparators(upperBoundSeparators);
+            CheckBoundSeparators(lowerBoundParts, upperBoundParts, lowerBoundSeparators, upperBoundSeparators);
+
+            return GetSequence(lowerBoundParts, upperBoundParts, lowerBoundSeparators);
         }
 
-        private List<BoundPart> GetBoundAlphanumericParts(string bound)
+        private static List<BoundPart> GetBoundAlphanumericParts(string bound)
         {
             var alphanumGroupsRegex = new Regex($"(?<{LOW_ALPHA}>[a-z]+)|(?<{UP_ALPHA}>[A-Z]+)|(?<{NUMERIC}>\\d+)", RegexOptions.Compiled);
             var matches = alphanumGroupsRegex.Matches(bound);
@@ -52,29 +50,29 @@ namespace AlphanumericSequenceGenerator
             return boundParts;
         }
 
-        private void CheckBoundAlphanumericParts()
+        private static void CheckBoundAlphanumericParts(List<BoundPart> lowers, List<BoundPart> uppers)
         {
-            if (_lowerBoundParts.Count != _upperBoundParts.Count)
-                throw new Exception($"The number of groups in bounds are different: {_lowerBoundParts.Count} / {_upperBoundParts.Count}.");
+            if (lowers.Count != uppers.Count)
+                throw new Exception($"The number of groups in bounds are different: {lowers.Count} / {uppers.Count}.");
 
-            for (var i = 0; i < _lowerBoundParts.Count; i++)
+            for (var i = 0; i < lowers.Count; i++)
             {
-                if (_lowerBoundParts[i].groupType != _upperBoundParts[i].groupType)
-                    throw new Exception($"Group types in bounds are different: {_lowerBoundParts[i].part} / {_upperBoundParts[i].part}.");
+                if (lowers[i].groupType != uppers[i].groupType)
+                    throw new Exception($"Group types in bounds are different: {lowers[i].part} / {uppers[i].part}.");
 
-                if (_lowerBoundParts[i].length > _upperBoundParts[i].length)
-                    throw new Exception($"A group length in the lower bound is longer than in the upper bound: {_lowerBoundParts[i].part} > {_upperBoundParts[i].part}.");
+                if (lowers[i].length > uppers[i].length)
+                    throw new Exception($"A group length in the lower bound is longer than in the upper bound: {lowers[i].part} > {uppers[i].part}.");
 
-                var lower = _lowerBoundParts[i].part;
-                var upper = _upperBoundParts[i].part;
+                var lower = lowers[i].part;
+                var upper = uppers[i].part;
                 if (lower.Length < upper.Length)
                     lower = new string(' ', upper.Length - lower.Length) + lower;
                 if (lower.CompareTo(upper) > 0)
-                    throw new Exception($"A group in the lower bound follows the related group in the upper bound: {_lowerBoundParts[i].part} > {_upperBoundParts[i].part}.");
+                    throw new Exception($"A group in the lower bound follows the related group in the upper bound: {lowers[i].part} > {uppers[i].part}.");
             }
         }
 
-        private List<BoundPart> GetBoundSeparators(string bound)
+        private static List<BoundPart> GetBoundSeparators(string bound)
         {
             var separatorsRegex = new Regex(@"(\W|_)+", RegexOptions.Compiled);
             var matches = separatorsRegex.Matches(bound);
@@ -88,21 +86,19 @@ namespace AlphanumericSequenceGenerator
             return separators;
         }
 
-        private void CheckBoundSeparators(List<BoundPart> upperSeparators)
+        private static void CheckBoundSeparators(List<BoundPart> lowers, List<BoundPart> uppers, List<BoundPart> lowerSeparators, List<BoundPart> upperSeparators)
         {
-            if (_boundSeparators.Count != upperSeparators.Count)
-                throw new Exception($"The number of separators in bounds are different: {_boundSeparators.Count} / {upperSeparators.Count}.");
+            if (lowerSeparators.Count != upperSeparators.Count)
+                throw new Exception($"The number of separators in bounds are different: {lowerSeparators.Count} / {upperSeparators.Count}.");
 
-            for (var i = 0; i < _boundSeparators.Count; i++)
+            for (var i = 0; i < lowerSeparators.Count; i++)
             {
-                if (_boundSeparators[i].part != upperSeparators[i].part)
-                    throw new Exception($"Separators in bounds are different: {_boundSeparators[i].part} / {upperSeparators[i].part}.");
+                if (lowerSeparators[i].part != upperSeparators[i].part)
+                    throw new Exception($"Separators in bounds are different: {lowerSeparators[i].part} / {upperSeparators[i].part}.");
             }
         }
 
-        public IEnumerable<string> GetSequence() => GetSequence(_lowerBoundParts, _upperBoundParts, _boundSeparators);
-
-        private IEnumerable<string> GetSequence(List<BoundPart> lowers, List<BoundPart> uppers, List<BoundPart> separators, string prefix = "")
+        private static IEnumerable<string> GetSequence(List<BoundPart> lowers, List<BoundPart> uppers, List<BoundPart> separators, string prefix = "")
         {
             var fullSequence = new List<string>();
             IEnumerable<string> sequence = null;
@@ -135,7 +131,7 @@ namespace AlphanumericSequenceGenerator
             return fullSequence;
         }
 
-        private IEnumerable<string> GetSubsequence(BoundPart lower, BoundPart upper, string prefix)
+        private static IEnumerable<string> GetSubsequence(BoundPart lower, BoundPart upper, string prefix)
         {
             var chars = new StringBuilder(lower.part);
 
